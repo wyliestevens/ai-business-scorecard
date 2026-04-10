@@ -1,91 +1,46 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import Button from '../shared/Button'
 import Logo from '../shared/Logo'
-import { sendLeadWebhook } from '../../hooks/useWebhook'
-
-const businessTypes = [
-  'Chiropractor',
-  'Dentist',
-  'Med Spa / Aesthetics',
-  'Home Services (HVAC, Plumbing, Electrical, Roofing)',
-  'Law Firm',
-  'Auto Repair / Body Shop',
-  'Real Estate',
-  'Veterinarian',
-  'Salon / Barbershop',
-  'Fitness / Gym / Personal Training',
-  'Accounting / Financial Services',
-  'Other Service Business',
-]
-
-const revenueOptions = [
-  'Under $10,000',
-  '$10,000 to $25,000',
-  '$25,000 to $50,000',
-  '$50,000 to $100,000',
-  '$100,000 to $250,000',
-  '$250,000+',
-]
-
-const employeeOptions = [
-  'Just me (solo operator)',
-  '2 to 5',
-  '6 to 10',
-  '11 to 25',
-  '26 to 50',
-  '50+',
-]
 
 export default function IntakeForm({ onSubmit }) {
   const navigate = useNavigate()
-  const [form, setForm] = useState({
-    full_name: '',
-    business_name: '',
-    email: '',
-    phone: '',
-    business_type: '',
-    monthly_revenue: '',
-    employee_count: '',
-  })
-  const [errors, setErrors] = useState({})
+  const [formSubmitted, setFormSubmitted] = useState(false)
 
-  function handleChange(e) {
-    const { name, value } = e.target
-    setForm((prev) => ({ ...prev, [name]: value }))
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }))
-  }
-
-  function validate() {
-    const errs = {}
-    if (!form.full_name.trim()) errs.full_name = 'Required'
-    if (!form.business_name.trim()) errs.business_name = 'Required'
-    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Valid email required'
-    if (!form.phone.trim()) errs.phone = 'Required'
-    if (!form.business_type) errs.business_type = 'Required'
-    if (!form.monthly_revenue) errs.monthly_revenue = 'Required'
-    if (!form.employee_count) errs.employee_count = 'Required'
-    return errs
-  }
-
-  function handleSubmit(e) {
-    e.preventDefault()
-    const errs = validate()
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs)
-      return
+  // Load GHL form embed script
+  useEffect(() => {
+    const script = document.createElement('script')
+    script.src = 'https://link.aipeakbiz.com/js/form_embed.js'
+    script.async = true
+    document.body.appendChild(script)
+    return () => {
+      document.body.removeChild(script)
     }
-    sendLeadWebhook(form)
-    onSubmit(form)
+  }, [])
+
+  // Listen for GHL form submission via postMessage
+  useEffect(() => {
+    function handleMessage(event) {
+      if (event.origin !== 'https://link.aipeakbiz.com') return
+      const data = event.data
+      if (
+        data &&
+        (data.type === 'form:submit' ||
+          data.formSubmitted === true ||
+          (typeof data === 'string' && data.includes('submit')))
+      ) {
+        setFormSubmitted(true)
+      }
+    }
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [])
+
+  function handleContinue() {
+    onSubmit()
     navigate('/evaluate')
   }
-
-  const inputClass = (field) =>
-    `w-full bg-navy-700 border ${errors[field] ? 'border-red-500' : 'border-gray-700'} rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400 transition-colors`
-
-  const selectClass = (field) =>
-    `w-full bg-navy-700 border ${errors[field] ? 'border-red-500' : 'border-gray-700'} rounded-lg px-4 py-3 text-white focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400 transition-colors appearance-none`
 
   return (
     <div className="min-h-screen bg-navy-900 px-4 py-8">
@@ -103,113 +58,54 @@ export default function IntakeForm({ onSubmit }) {
             Tell Us About Your Business
           </h1>
           <p className="text-gray-400 mb-8">
-            We use this to customize your scorecard results and AI recommendations.
+            Fill out the form below to get started with your free AI Business Scorecard.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid md:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1.5">Full Name</label>
-                <input
-                  type="text"
-                  name="full_name"
-                  value={form.full_name}
-                  onChange={handleChange}
-                  placeholder="John Smith"
-                  className={inputClass('full_name')}
-                />
-                {errors.full_name && <p className="text-red-400 text-xs mt-1">{errors.full_name}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1.5">Business Name</label>
-                <input
-                  type="text"
-                  name="business_name"
-                  value={form.business_name}
-                  onChange={handleChange}
-                  placeholder="Smith Dental"
-                  className={inputClass('business_name')}
-                />
-                {errors.business_name && <p className="text-red-400 text-xs mt-1">{errors.business_name}</p>}
-              </div>
-            </div>
+          {/* GHL Embedded Form */}
+          <div className="bg-navy-800 border border-gray-700 rounded-2xl p-4 mb-8" style={{ minHeight: '874px' }}>
+            <iframe
+              src="https://link.aipeakbiz.com/widget/form/QIficAgWo5MUx9gS2eU1"
+              style={{ width: '100%', height: '874px', border: 'none', borderRadius: '3px' }}
+              id="inline-QIficAgWo5MUx9gS2eU1"
+              data-layout="{'id':'INLINE'}"
+              data-trigger-type="alwaysShow"
+              data-trigger-value=""
+              data-activation-type="alwaysActivated"
+              data-activation-value=""
+              data-deactivation-type="neverDeactivate"
+              data-deactivation-value=""
+              data-form-name="Website Builder Setup"
+              data-height="874"
+              data-layout-iframe-id="inline-QIficAgWo5MUx9gS2eU1"
+              data-form-id="QIficAgWo5MUx9gS2eU1"
+              title="Website Builder Setup"
+            />
+          </div>
 
-            <div className="grid md:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1.5">Email Address</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  placeholder="john@smithdental.com"
-                  className={inputClass('email')}
-                />
-                {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1.5">Phone Number</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={form.phone}
-                  onChange={handleChange}
-                  placeholder="(555) 123-4567"
-                  className={inputClass('phone')}
-                />
-                {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone}</p>}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1.5">Business Type / Vertical</label>
-              <div className="relative">
-                <select name="business_type" value={form.business_type} onChange={handleChange} className={selectClass('business_type')}>
-                  <option value="">Select your industry...</option>
-                  {businessTypes.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                </div>
-              </div>
-              {errors.business_type && <p className="text-red-400 text-xs mt-1">{errors.business_type}</p>}
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1.5">Approximate Monthly Revenue</label>
-                <div className="relative">
-                  <select name="monthly_revenue" value={form.monthly_revenue} onChange={handleChange} className={selectClass('monthly_revenue')}>
-                    <option value="">Select range...</option>
-                    {revenueOptions.map((r) => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                  </div>
-                </div>
-                {errors.monthly_revenue && <p className="text-red-400 text-xs mt-1">{errors.monthly_revenue}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1.5">Number of Employees</label>
-                <div className="relative">
-                  <select name="employee_count" value={form.employee_count} onChange={handleChange} className={selectClass('employee_count')}>
-                    <option value="">Select range...</option>
-                    {employeeOptions.map((e) => <option key={e} value={e}>{e}</option>)}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                  </div>
-                </div>
-                {errors.employee_count && <p className="text-red-400 text-xs mt-1">{errors.employee_count}</p>}
-              </div>
-            </div>
-
-            <div className="pt-4">
-              <Button type="submit" size="lg" className="w-full">
-                Start My Evaluation
+          {/* Continue button */}
+          {formSubmitted ? (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <Button size="lg" className="w-full" onClick={handleContinue}>
+                Start My Assessment
               </Button>
+            </motion.div>
+          ) : (
+            <div className="text-center">
+              <p className="text-gray-500 text-sm mb-3">
+                Complete the form above, then continue to your assessment.
+              </p>
+              <button
+                onClick={handleContinue}
+                className="text-teal-400 text-sm underline underline-offset-2 hover:text-teal-300 transition-colors"
+              >
+                I've already submitted the form
+              </button>
             </div>
-          </form>
+          )}
         </motion.div>
       </div>
     </div>

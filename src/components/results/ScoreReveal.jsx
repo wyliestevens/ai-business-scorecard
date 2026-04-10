@@ -11,20 +11,13 @@ import { dimensions } from '../../data/dimensions'
 export default function ScoreReveal({ answers, businessInfo }) {
   const navigate = useNavigate()
   const webhookSent = useRef(false)
-  const scoring = useScoring(answers, businessInfo.monthly_revenue)
+  const scoring = useScoring(answers, businessInfo?.monthly_revenue)
 
   useEffect(() => {
     if (webhookSent.current) return
     webhookSent.current = true
 
     sendResultsWebhook({
-      full_name: businessInfo.full_name,
-      business_name: businessInfo.business_name,
-      email: businessInfo.email,
-      phone: businessInfo.phone,
-      business_type: businessInfo.business_type,
-      monthly_revenue: businessInfo.monthly_revenue,
-      employee_count: businessInfo.employee_count,
       overall_score: scoring.overallScore,
       maturity_level: scoring.maturity.level,
       communication_score: scoring.dimensionScores.communication,
@@ -39,7 +32,7 @@ export default function ScoreReveal({ answers, businessInfo }) {
       second_lowest_dimension: dimensions[scoring.secondLowestDimension]?.name || '',
       recommended_tier: scoring.recommendation.name,
     })
-  }, [scoring, businessInfo])
+  }, [scoring])
 
   // Redirect if no answers
   if (Object.keys(answers).length < 12) {

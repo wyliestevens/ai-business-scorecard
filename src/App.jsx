@@ -7,26 +7,28 @@ import ScoreReveal from './components/results/ScoreReveal'
 import ResultsDashboard from './components/results/ResultsDashboard'
 
 export default function App() {
-  const [businessInfo, setBusinessInfo] = useState({})
+  const [intakeCompleted, setIntakeCompleted] = useState(false)
   const [answers, setAnswers] = useState({})
 
-  const handleIntakeSubmit = useCallback((info) => {
-    setBusinessInfo(info)
+  const handleIntakeSubmit = useCallback(() => {
+    setIntakeCompleted(true)
   }, [])
 
   const handleAnswer = useCallback((questionId, score) => {
     setAnswers((prev) => ({ ...prev, [questionId]: score }))
   }, [])
 
+  const businessInfo = { business_name: '', monthly_revenue: '' }
+
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/free-assessment">
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/intake" element={<IntakeForm onSubmit={handleIntakeSubmit} />} />
         <Route
           path="/evaluate"
           element={
-            businessInfo.email
+            intakeCompleted
               ? <EvaluationFlow answers={answers} onAnswer={handleAnswer} />
               : <Navigate to="/intake" replace />
           }

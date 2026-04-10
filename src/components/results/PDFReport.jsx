@@ -27,7 +27,7 @@ export async function generatePDF({ businessInfo, scoring }) {
   // Header
   addText('AI BUSINESS SCORECARD', margin, y, { size: 24, color: [0, 212, 170], style: 'bold' })
   y += 12
-  addText(`Prepared for ${businessInfo.business_name}`, margin, y, { size: 12, color: [255, 255, 255] })
+  addText(`Prepared for ${businessInfo?.business_name || 'Your Business'}`, margin, y, { size: 12, color: [255, 255, 255] })
   y += 6
   addText(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), margin, y, { size: 9, color: [150, 150, 150] })
   y += 12
@@ -103,5 +103,6 @@ export async function generatePDF({ businessInfo, scoring }) {
   y += 5
   addText('928.628.6080 | wylie@aipeakbiz.com | Kingman, Arizona', margin, y, { size: 8, color: [150, 150, 150] })
 
-  pdf.save(`AI-Business-Scorecard-${businessInfo.business_name.replace(/\s+/g, '-')}.pdf`)
+  const safeName = (businessInfo?.business_name || 'Report').replace(/\s+/g, '-')
+  pdf.save(`AI-Business-Scorecard-${safeName}.pdf`)
 }

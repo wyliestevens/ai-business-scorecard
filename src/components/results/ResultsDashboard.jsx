@@ -15,7 +15,7 @@ import { generatePDF } from './PDFReport'
 
 export default function ResultsDashboard({ answers, businessInfo }) {
   const navigate = useNavigate()
-  const scoring = useScoring(answers, businessInfo.monthly_revenue)
+  const scoring = useScoring(answers, businessInfo?.monthly_revenue)
 
   if (Object.keys(answers).length < 12) {
     return (
@@ -53,7 +53,7 @@ export default function ResultsDashboard({ answers, businessInfo }) {
               Your AI Business Scorecard Results
             </h1>
             <p className="text-gray-400">
-              Prepared for <span className="text-white font-medium">{businessInfo.business_name}</span>
+              Prepared for <span className="text-white font-medium">{businessInfo?.business_name || 'Your Business'}</span>
             </p>
           </motion.div>
 
